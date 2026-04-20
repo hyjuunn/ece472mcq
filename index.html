@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECE472 Question Bank</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #000000;
+      --border-color: #000000;
+      --hover-bg: #f0f0f0;
+      --correct-color: #2e7d32; /* 진한 초록색 */
+      --wrong-color: #d32f2f;   /* 진한 빨간색 */
+    }
+    
+    body {
+      font-family: 'Courier New', Courier, monospace;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      line-height: 1.6;
+    }
+
+    header {
+      border-bottom: 3px solid var(--border-color);
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+    }
+
+    h1 { font-size: 2rem; margin: 0; text-transform: uppercase; }
+
+    /* 필터 및 네비게이션 영역 */
+    .dashboard {
+      margin-bottom: 2rem;
+      padding: 1rem;
+      background-color: #fafafa;
+      border: 1px solid var(--border-color);
+    }
+
+    .top-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 1rem;
+    }
+
+    .top-actions .btn {
+      border-width: 3px;
+      box-shadow: 4px 4px 0 var(--border-color);
+      transform: translateY(0);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .top-actions .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 6px 6px 0 var(--border-color);
+    }
+
+    .filter-container {
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    select {
+      padding: 0.5rem;
+      font-family: inherit;
+      font-weight: bold;
+      border: 2px solid var(--border-color);
+      cursor: pointer;
+    }
+
+    .nav-tabs {
+      display: flex;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      gap: 0.5rem;
+      padding-bottom: 5px; /* Added for scrollbar spacing */
+    }
+
+    .tab-btn {
+      background: var(--bg-color);
+      border: 1px solid var(--border-color);
+      padding: 0.3rem 0.8rem;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: bold;
+    }
+
+    .tab-btn:hover { background: var(--hover-bg); }
+    
+    .tab-btn.active {
+      background: var(--text-color);
+      color: var(--bg-color);
+    }
+
+    /* 퀴즈 UI */
+    .chapter-tag {
+      display: inline-block;
+      background: var(--text-color);
+      color: var(--bg-color);
+      padding: 0.2rem 0.5rem;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+
+    .question-container { font-size: 1.2rem; font-weight: bold; margin-bottom: 1.5rem; }
+
+    .options-container { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 2rem; }
+
+    .option {
+      border: 2px solid var(--border-color);
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: bold;
+    }
+
+    .option:hover { background-color: var(--hover-bg); }
+    .option.selected { background-color: var(--border-color); color: var(--bg-color); }
+    
+    /* 정답/오답 스타일 업데이트 */
+    .option.correct { 
+      background-color: var(--correct-color); 
+      color: white; 
+      border-color: var(--correct-color); 
+    }
+    .option.wrong { 
+      background-color: var(--wrong-color); 
+      color: white; 
+      border-color: var(--wrong-color); 
+    }
+
+    .btn {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      border: 2px solid var(--border-color);
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-family: inherit;
+    }
+
+    .btn:hover:not(:disabled) { background-color: var(--text-color); color: var(--bg-color); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .controls { display: flex; justify-content: space-between; margin-bottom: 2rem; }
+
+    .explanation-container {
+      display: none;
+      border: 2px dashed var(--border-color);
+      padding: 1.5rem;
+      background-color: #fafafa;
+      margin-top: 1rem;
+    }
+
+    .explanation-container.visible { display: block; }
+    .explanation-title { font-weight: bold; text-transform: uppercase; margin-bottom: 0.5rem; }
+
+    .results-display {
+      display: none;
+      border: 2px solid var(--border-color);
+      padding: 1rem;
+      margin-top: 1rem;
+      background-color: #fafafa;
+    }
+
+    .results-summary {
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+
+    .review-item {
+      border: 1px solid var(--border-color);
+      padding: 0.8rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .review-item p {
+      margin: 0.3rem 0;
+    }
+
+    .review-correct {
+      color: var(--correct-color);
+      font-weight: bold;
+    }
+
+    .review-wrong {
+      color: var(--wrong-color);
+      font-weight: bold;
+    }
+
+    /* Responsive Design for Mobile */
+    @media (max-width: 600px) {
+      body {
+        padding: 1rem;
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+      .filter-container {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .controls {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .btn {
+        width: 100%;
+        text-align: center;
+      }
+
+      .top-actions {
+        margin-bottom: 0.8rem;
+      }
+
+      .results-display {
+        padding: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>ECE472 Question Bank</h1>
+    <p>Randomly generated by LLMs</p>
+  </header>
+
+  <main>
+    <div id="top-actions" class="top-actions">
+      <button id="btn-random-25" class="btn" type="button">Start Random 25</button>
+    </div>
+
+    <div class="dashboard">
+      <div class="filter-container">
+        <label for="chapter-select"><strong>Filter by Chapter:</strong></label>
+        <select id="chapter-select">
+          <option value="All">All Chapters</option>
+          </select>
+      </div>
+      <div id="nav-tabs" class="nav-tabs">
+        </div>
+    </div>
+
+    <div id="quiz-app">
+      <div id="chapter-display" class="chapter-tag"></div>
+      <div id="question-display" class="question-container">Loading...</div>
+      <div id="options-display" class="options-container"></div>
+      
+      <div class="controls">
+        <button id="btn-see-answer" class="btn" disabled>See Answer</button>
+        <button id="btn-next" class="btn" style="display: none;">Next Question &rarr;</button>
+      </div>
+
+      <div id="explanation-display" class="explanation-container">
+        <div class="explanation-title">Explanation:</div>
+        <div id="explanation-text"></div>
+      </div>
+    </div>
+
+    <div id="results-display" class="results-display">
+      <h2>Random 25 Results</h2>
+      <div id="results-summary" class="results-summary"></div>
+      <div id="results-review-list"></div>
+      <button id="btn-back-main" class="btn" type="button">Back to Main</button>
+    </div>
+  </main>
+
+  <script src="questions.js"></script>
+  
+  <script>
+    let filteredQuestions = [];
+    let currentFilteredIndex = 0;
+    let selectedOptionIndex = null;
+    let isAnswerRevealed = false;
+    let isRandomMode = false;
+    let userAnswers = [];
+
+    const chapterSelect = document.getElementById('chapter-select');
+    const navTabsContainer = document.getElementById('nav-tabs');
+    const chapterDisplay = document.getElementById('chapter-display');
+    const questionDisplay = document.getElementById('question-display');
+    const optionsDisplay = document.getElementById('options-display');
+    const btnSeeAnswer = document.getElementById('btn-see-answer');
+    const btnNext = document.getElementById('btn-next');
+    const explanationDisplay = document.getElementById('explanation-display');
+    const explanationText = document.getElementById('explanation-text');
+    const btnRandom25 = document.getElementById('btn-random-25');
+    const topActions = document.getElementById('top-actions');
+    const dashboard = document.querySelector('.dashboard');
+    const quizApp = document.getElementById('quiz-app');
+    const resultsDisplay = document.getElementById('results-display');
+    const resultsSummary = document.getElementById('results-summary');
+    const resultsReviewList = document.getElementById('results-review-list');
+    const btnBackMain = document.getElementById('btn-back-main');
+
+    function initApp() {
+      if (typeof quizBank === 'undefined' || quizBank.length === 0) {
+        questionDisplay.textContent = "Error: Could not load questions.js file or it's empty.";
+        return;
+      }
+
+      // 1. 드롭다운에 존재하는 챕터들만 추출해서 옵션 추가
+      const uniqueChapters = [...new Set(quizBank.map(q => q.chapter))];
+      
+      // 챕터 이름에서 숫자를 추출하여 정렬
+      uniqueChapters.sort((a, b) => {
+        const numA = parseInt(a.match(/\d+/)?.[0] || 0);
+        const numB = parseInt(b.match(/\d+/)?.[0] || 0);
+        return numA - numB;
+      });
+
+      uniqueChapters.forEach(chapter => {
+        const option = document.createElement('option');
+        option.value = chapter;
+        option.textContent = chapter;
+        chapterSelect.appendChild(option);
+      });
+
+      // 드롭다운 변경 이벤트
+      chapterSelect.addEventListener('change', (e) => {
+        filterQuestions(e.target.value);
+      });
+
+      btnRandom25.addEventListener('click', startRandom25Mode);
+
+      btnBackMain.addEventListener('click', () => {
+        resultsDisplay.style.display = 'none';
+        topActions.style.display = 'flex';
+        dashboard.style.display = 'block';
+        quizApp.style.display = 'block';
+        chapterSelect.value = 'All';
+        filterQuestions('All');
+      });
+
+      // 초기 설정 (전체 문제)
+      filterQuestions('All');
+    }
+
+    function startRandom25Mode() {
+      const count = Math.min(25, quizBank.length);
+      const shuffled = [...quizBank].sort(() => Math.random() - 0.5);
+
+      isRandomMode = true;
+      filteredQuestions = shuffled.slice(0, count);
+      userAnswers = new Array(filteredQuestions.length).fill(null);
+
+      topActions.style.display = 'none';
+      dashboard.style.display = 'none';
+      resultsDisplay.style.display = 'none';
+      quizApp.style.display = 'block';
+
+      loadQuestion(0);
+    }
+
+    function filterQuestions(chapter) {
+      isRandomMode = false;
+      if (chapter === 'All') {
+        filteredQuestions = [...quizBank];
+      } else {
+        filteredQuestions = quizBank.filter(q => q.chapter === chapter);
+      }
+      
+      renderNavTabs();
+      if (filteredQuestions.length > 0) {
+        loadQuestion(0);
+      } else {
+        questionDisplay.textContent = "No questions found for this chapter.";
+        optionsDisplay.innerHTML = '';
+        navTabsContainer.innerHTML = '';
+      }
+    }
+
+    function renderNavTabs() {
+      if (isRandomMode) {
+        navTabsContainer.innerHTML = '';
+        return;
+      }
+
+      navTabsContainer.innerHTML = '';
+      filteredQuestions.forEach((_, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'tab-btn';
+        btn.textContent = `Q${index + 1}`;
+        btn.onclick = () => loadQuestion(index);
+        navTabsContainer.appendChild(btn);
+      });
+    }
+
+    function updateNavTabsHighlight(index) {
+      if (isRandomMode) return;
+
+      const tabs = document.querySelectorAll('.tab-btn');
+      tabs.forEach((tab, i) => {
+        if (i === index) tab.classList.add('active');
+        else tab.classList.remove('active');
+      });
+    }
+
+    function loadQuestion(index) {
+      currentFilteredIndex = index;
+      updateNavTabsHighlight(index);
+
+      const q = filteredQuestions[index];
+      chapterDisplay.textContent = isRandomMode ? 'Random 25' : q.chapter;
+      chapterDisplay.style.display = 'inline-block';
+      
+      // 화면에는 1번부터 보이게 (index + 1)
+      questionDisplay.textContent = `Q${index + 1}. ${q.question}`;
+      
+      optionsDisplay.innerHTML = '';
+      q.options.forEach((opt, i) => {
+        const div = document.createElement('div');
+        div.className = 'option';
+        div.textContent = opt;
+        div.onclick = () => selectOption(i);
+        optionsDisplay.appendChild(div);
+      });
+
+      selectedOptionIndex = null;
+      isAnswerRevealed = false;
+      explanationDisplay.classList.remove('visible');
+
+      if (isRandomMode) {
+        btnSeeAnswer.style.display = 'none';
+        btnNext.style.display = 'block';
+        btnNext.disabled = true;
+        btnNext.textContent = currentFilteredIndex === filteredQuestions.length - 1
+          ? 'Finish & Grade'
+          : 'Save & Next';
+      } else {
+        btnSeeAnswer.disabled = true;
+        btnSeeAnswer.style.display = 'block';
+        btnNext.style.display = 'none';
+        btnNext.textContent = 'Next Question →';
+      }
+    }
+
+    function selectOption(index) {
+      if (isAnswerRevealed && !isRandomMode) return;
+      selectedOptionIndex = index;
+      const options = document.querySelectorAll('.option');
+      options.forEach(opt => opt.classList.remove('selected'));
+      options[index].classList.add('selected');
+
+      if (isRandomMode) {
+        btnNext.disabled = false;
+      } else {
+        btnSeeAnswer.disabled = false;
+      }
+    }
+
+    btnSeeAnswer.onclick = () => {
+      if (isRandomMode) return;
+      if (selectedOptionIndex === null) return;
+      const q = filteredQuestions[currentFilteredIndex];
+      const options = document.querySelectorAll('.option');
+      isAnswerRevealed = true;
+      btnSeeAnswer.style.display = 'none';
+      
+      // 마지막 문제가 아니라면 Next 버튼 표시
+      if (currentFilteredIndex < filteredQuestions.length - 1) {
+        btnNext.style.display = 'block';
+      }
+
+      // 정답이면 초록색, 오답이면 선택한건 빨간색 정답은 초록색
+      if (selectedOptionIndex === q.correctAnswer) {
+        options[selectedOptionIndex].classList.add('correct');
+      } else {
+        options[selectedOptionIndex].classList.add('wrong');
+        options[q.correctAnswer].classList.add('correct');
+      }
+
+      explanationText.textContent = q.explanation;
+      explanationDisplay.classList.add('visible');
+    };
+
+    btnNext.onclick = () => {
+      if (isRandomMode) {
+        if (selectedOptionIndex === null) return;
+
+        userAnswers[currentFilteredIndex] = selectedOptionIndex;
+
+        if (currentFilteredIndex < filteredQuestions.length - 1) {
+          loadQuestion(currentFilteredIndex + 1);
+        } else {
+          showRandomResults();
+        }
+        return;
+      }
+
+      if (currentFilteredIndex < filteredQuestions.length - 1) {
+        loadQuestion(currentFilteredIndex + 1);
+      }
+    };
+
+    function showRandomResults() {
+      let score = 0;
+      resultsReviewList.innerHTML = '';
+
+      filteredQuestions.forEach((q, idx) => {
+        const userAnswerIdx = userAnswers[idx];
+        const isCorrect = userAnswerIdx === q.correctAnswer;
+        if (isCorrect) score += 1;
+
+        const item = document.createElement('div');
+        item.className = 'review-item';
+
+        const questionP = document.createElement('p');
+        questionP.innerHTML = `<strong>Q${idx + 1} (${q.chapter})</strong> ${q.question}`;
+
+        const yourAnswerP = document.createElement('p');
+        const yourAnswerText = userAnswerIdx === null
+          ? 'No answer'
+          : q.options[userAnswerIdx];
+        yourAnswerP.textContent = `Your answer: ${yourAnswerText}`;
+        yourAnswerP.className = isCorrect ? 'review-correct' : 'review-wrong';
+
+        const correctAnswerP = document.createElement('p');
+        correctAnswerP.textContent = `Correct answer: ${q.options[q.correctAnswer]}`;
+        correctAnswerP.className = 'review-correct';
+
+        const explanationP = document.createElement('p');
+        explanationP.textContent = `Explanation: ${q.explanation}`;
+
+        item.appendChild(questionP);
+        item.appendChild(yourAnswerP);
+        item.appendChild(correctAnswerP);
+        item.appendChild(explanationP);
+        resultsReviewList.appendChild(item);
+      });
+
+      resultsSummary.textContent = `Score: ${score} / ${filteredQuestions.length}`;
+      quizApp.style.display = 'none';
+      resultsDisplay.style.display = 'block';
+    }
+
+    // Initialize App
+    window.onload = initApp;
+  </script>
+</body>
+</html>
